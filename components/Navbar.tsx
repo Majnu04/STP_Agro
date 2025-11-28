@@ -35,7 +35,7 @@ const Navbar: React.FC<NavbarProps> = ({ cartCount, t, onSearch, onCartClick, on
           <div className="relative">
             <div className="absolute inset-0 bg-agri-green/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all opacity-0 group-hover:opacity-100"></div>
             <img 
-              src="/Gemini_Generated_Image_kt73h3kt73h3kt73 (1).png" 
+              src="/logo.png" 
               alt="STP Agro Logo" 
               className="w-12 h-12 md:w-20 md:h-20 object-contain mr-2 md:mr-4 relative z-10 group-hover:scale-105 transition-transform duration-300"
             />
