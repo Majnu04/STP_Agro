@@ -154,7 +154,7 @@ const Login: React.FC<LoginProps> = ({ onClose, onLoginSuccess, t }) => {
           <div className="flex flex-col items-center pt-8">
             <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mb-3 shadow-lg overflow-hidden p-2">
               <img 
-                src="/Gemini_Generated_Image_kt73h3kt73h3kt73 (1).png" 
+                src="/logo.png" 
                 alt="STP Agro Logo" 
                 className="w-full h-full object-contain"
               />

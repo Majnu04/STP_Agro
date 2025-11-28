@@ -23,10 +23,10 @@ const Footer: React.FC<FooterProps> = ({ t, onPrivacyClick, onTermsClick, onShip
           <div>
              <div className="flex items-center gap-3 mb-6">
                <img 
-                 src="/Gemini_Generated_Image_kt73h3kt73h3kt73 (1).png" 
-                 alt="STP Agro Logo" 
-                 className="w-16 h-16 object-contain"
-               />
+                   src="/logo.png" 
+                   alt="STP Agro Logo" 
+                   className="w-16 h-16 object-contain"
+                 />
                <div>
                  <h3 className="text-lg font-display font-extrabold leading-tight text-white">
                    STP AGRO
