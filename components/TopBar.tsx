@@ -30,7 +30,7 @@ const TopBar: React.FC<TopBarProps> = ({ language, onLanguageChange, t, onLoginC
   };
 
   return (
-    <div className="bg-gradient-to-r from-[#054025] via-[#0A773D] to-[#065a2f] border-b border-white/10 text-xs sm:text-sm text-gray-100 shadow-lg relative z-40">
+    <div className="bg-gradient-to-r from-[#054025] via-[#0A773D] to-[#065a2f] border-b border-white/10 text-xs sm:text-sm text-gray-100 shadow-lg relative z-[140]">
       <div className="container mx-auto px-3 sm:px-4 h-10 md:h-11 flex justify-between items-center">
         <div className="flex items-center space-x-2 sm:space-x-3 md:space-x-6">
           <a href="tel:+919676606857" className="flex items-center hover:text-agri-yellow transition-all font-semibold min-w-0">
@@ -48,7 +48,7 @@ const TopBar: React.FC<TopBarProps> = ({ language, onLanguageChange, t, onLoginC
           <a onClick={onWishlistClick} className="hover:text-agri-yellow transition-all font-semibold cursor-pointer hidden md:inline">{t.wishlist}</a>
           
           {/* User Section */}
-          <div className="relative z-50">
+          <div className="relative z-[180]">
             <button
               onClick={() => user ? setIsUserDropdownOpen(!isUserDropdownOpen) : onLoginClick()}
               type="button"
@@ -110,7 +110,7 @@ const TopBar: React.FC<TopBarProps> = ({ language, onLanguageChange, t, onLoginC
           </div>
           
           {/* Language Selector */}
-          <div className="relative z-[101]">
+          <div className="relative z-[200]">
             <button 
               onClick={toggleDropdown}
               type="button"
@@ -125,10 +125,10 @@ const TopBar: React.FC<TopBarProps> = ({ language, onLanguageChange, t, onLoginC
             {isLanguageDropdownOpen && (
               <>
                 <div 
-                  className="fixed inset-0 z-[99]" 
+                  className="fixed inset-0 z-[180]" 
                   onClick={() => setIsLanguageDropdownOpen(false)}
                 ></div>
-                <div className="absolute right-0 top-full mt-2 w-40 bg-white shadow-2xl rounded-xl py-2 border border-gray-200 z-[102] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="absolute right-0 top-full mt-2 w-40 bg-white shadow-2xl rounded-xl py-2 border border-gray-200 z-[210] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                   <button 
                     onClick={() => handleLanguageChange('en')}
                     type="button"
