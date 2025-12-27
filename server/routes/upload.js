@@ -1,7 +1,24 @@
 const express = require('express');
 const router = express.Router();
-const { upload } = require('../config/spaces');
+const {
+  upload,
+  deleteImage,
+  isSpacesConfigured,
+  missingSpacesEnv
+} = require('../config/spaces');
 const { protect, admin } = require('../middleware/auth');
+
+// Disable upload routes when DigitalOcean Spaces is not configured
+router.use((req, res, next) => {
+  if (!isSpacesConfigured) {
+    return res.status(503).json({
+      success: false,
+      message: 'Image upload is disabled: DigitalOcean Spaces environment variables are missing.',
+      missingEnv: missingSpacesEnv
+    });
+  }
+  next();
+});
 
 // @route   POST /api/upload/image
 // @desc    Upload product image to DigitalOcean Spaces
@@ -73,7 +90,6 @@ router.delete('/image', protect, admin, async (req, res) => {
       return res.status(400).json({ message: 'Image URL is required' });
     }
 
-    const { deleteImage } = require('../config/spaces');
     const deleted = await deleteImage(imageUrl);
 
     if (deleted) {

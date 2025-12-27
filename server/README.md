@@ -200,6 +200,11 @@ Password: Admin@123
 | JWT_SECRET | JWT secret key | - |
 | JWT_EXPIRE | Token expiration | 7d |
 | FRONTEND_URL | Frontend URL for CORS | http://localhost:3000 |
+| DO_SPACES_ENDPOINT | DigitalOcean Spaces endpoint | nyc3.digitaloceanspaces.com |
+| DO_SPACES_KEY | Spaces access key | - |
+| DO_SPACES_SECRET | Spaces secret key | - |
+| DO_SPACES_REGION | Spaces region | nyc3 |
+| DO_SPACES_BUCKET | Spaces bucket name | - |
 | NODE_ENV | Environment | development |
 
 ## Development

@@ -171,8 +171,8 @@ const Navbar: React.FC<NavbarProps> = ({ cartCount, t, onSearch, onCartClick, on
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div className="md:hidden absolute top-20 left-0 w-full bg-white shadow-lg border-t border-cream-200 z-50 h-[calc(100vh-80px)] overflow-y-auto">
-          <div className="p-4">
+        <div className="md:hidden absolute top-20 left-0 w-full bg-white shadow-lg border-t border-cream-200 z-50 h-[calc(100vh-80px)] overflow-y-auto flex flex-col pt-[8.5rem] sm:pt-[9.5rem]">
+          <div className="flex-1 p-4 overflow-y-auto">
              <div className="flex w-full border border-cream-200 rounded-lg overflow-hidden mb-6 bg-cream-50">
                 <input 
                   type="text" 

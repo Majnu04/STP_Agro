@@ -1,23 +1,6 @@
 import { Category, NavItem, Product, Stat } from "./types";
 
-export const NAV_ITEMS: NavItem[] = [
-  { 
-    label: "Seeds", 
-    hasMegaMenu: true,
-    subItems: [
-      { title: "Vegetable Seeds", items: ["Tomato", "Chili", "Okra", "Brinjal", "Cabbage"] },
-      { title: "Field Crops", items: ["Cotton", "Maize", "Paddy", "Wheat", "Mustard"] },
-      { title: "Fruit Seeds", items: ["Watermelon", "Muskmelon", "Papaya", "Cucumber"] },
-    ]
-  },
-  { label: "Crop Protection", hasMegaMenu: true, subItems: [
-      { title: "Type", items: ["Insecticides", "Fungicides", "Herbicides", "Bio-Pesticides"] }
-  ]},
-  { label: "Crop Nutrition" },
-  { label: "Equipment" },
-  { label: "Organic" },
-  { label: "Smart Farming" },
-];
+export const NAV_ITEMS: NavItem[] = [];
 
 export const CATEGORIES: Category[] = [
   { id: 1, name: "Seeds", image: "https://images.unsplash.com/photo-1592419044706-39796d40f98c?w=400&h=400&fit=crop&q=80" },

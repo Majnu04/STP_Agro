@@ -10,6 +10,9 @@ interface LoginProps {
 const Login: React.FC<LoginProps> = ({ onClose, onLoginSuccess, t }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotEmailSent, setForgotEmailSent] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -265,9 +268,13 @@ const Login: React.FC<LoginProps> = ({ onClose, onLoginSuccess, t }) => {
                 <input type="checkbox" className="mr-2 accent-agri-green" />
                 <span className="text-gray-600">{t?.rememberMe || 'Remember me'}</span>
               </label>
-              <a href="#" className="text-agri-green font-semibold hover:underline">
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
+                className="text-agri-green font-semibold hover:underline"
+              >
                 {t?.forgotPassword || 'Forgot Password?'}
-              </a>
+              </button>
             </div>
           )}
 
@@ -292,6 +299,52 @@ const Login: React.FC<LoginProps> = ({ onClose, onLoginSuccess, t }) => {
             </p>
           </div>
         </form>
+
+        {/* Forgot Password Modal */}
+        {showForgotPassword && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-4 animate-in fade-in zoom-in duration-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-bold text-gray-900">Reset Password</h3>
+                <button onClick={() => { setShowForgotPassword(false); setForgotEmailSent(false); setForgotEmail(''); }} className="p-1 hover:bg-gray-100 rounded-full">
+                  <X size={20} />
+                </button>
+              </div>
+              {forgotEmailSent ? (
+                <div className="text-center py-6 space-y-3">
+                  <div className="w-16 h-16 mx-auto bg-amber-100 rounded-full flex items-center justify-center text-amber-600 text-3xl">⚠️</div>
+                  <p className="text-gray-700 font-semibold">Feature Coming Soon!</p>
+                  <p className="text-sm text-gray-500">Password reset via email is not yet available. Please contact support at <strong>+91 96766 06857</strong> for password assistance.</p>
+                  <button onClick={() => { setShowForgotPassword(false); setForgotEmailSent(false); setForgotEmail(''); }} className="mt-4 px-6 py-2 bg-agri-green text-white rounded-lg font-semibold hover:bg-agri-darkGreen">Close</button>
+                </div>
+              ) : (
+                <>
+                  <p className="text-sm text-gray-600">Enter your email address and we'll send you a link to reset your password.</p>
+                  <input
+                    type="email"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    placeholder="Enter your email"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-agri-green focus:outline-none"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (forgotEmail) {
+                        // Simulated email send
+                        setForgotEmailSent(true);
+                      }
+                    }}
+                    className="w-full bg-agri-green text-white font-bold py-3 rounded-xl hover:bg-agri-darkGreen transition-colors"
+                  >
+                    Send Reset Link
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

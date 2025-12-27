@@ -23,6 +23,24 @@ const Cart: React.FC<CartProps> = ({ onClose, items, onUpdateQuantity, onRemove,
   const shipping = subtotal > 999 ? 0 : 50;
   const total = subtotal + shipping;
 
+  const handleCheckoutViaWhatsApp = () => {
+    if (items.length === 0) return;
+    const destination = '919676606857'; // Business WhatsApp number
+    const lines = [
+      'New order inquiry from STP Agro:',
+      '',
+      ...items.map((item, idx) => `${idx + 1}. ${item.name} (x${item.quantity}) — ₹${item.price} each`),
+      '',
+      `Subtotal: ₹${subtotal}`,
+      `Shipping: ${shipping === 0 ? 'FREE' : `₹${shipping}`}`,
+      `Total: ₹${total}`
+    ];
+
+    const message = encodeURIComponent(lines.join('\n'));
+    const url = `https://wa.me/${destination}?text=${message}`;
+    window.open(url, '_blank');
+  };
+
   return (
     <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center md:justify-end bg-black/60 backdrop-blur-sm">
       <div className="bg-white w-full md:w-[500px] h-[90vh] md:h-full md:max-h-[90vh] rounded-t-3xl md:rounded-l-3xl md:rounded-r-none shadow-2xl flex flex-col animate-in slide-in-from-bottom md:slide-in-from-right duration-300">
@@ -127,7 +145,10 @@ const Cart: React.FC<CartProps> = ({ onClose, items, onUpdateQuantity, onRemove,
             </div>
 
             {/* Checkout Button */}
-            <button className="w-full bg-gradient-to-r from-agri-green to-green-600 text-white font-bold py-3 rounded-xl hover:shadow-lg transition-all flex items-center justify-center gap-2 group">
+            <button 
+              onClick={handleCheckoutViaWhatsApp}
+              className="w-full bg-gradient-to-r from-agri-green to-green-600 text-white font-bold py-3 rounded-xl hover:shadow-lg transition-all flex items-center justify-center gap-2 group"
+            >
               {t?.proceedToCheckout || 'Proceed to Checkout'}
               <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
             </button>

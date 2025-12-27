@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, Plus, Edit2, Trash2, Save, Image as ImageIcon, Package, Upload, Truck, Grid } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Plus, Edit2, Trash2, Save, Image as ImageIcon, Package, Upload, Truck, Grid, MessageCircle, Send, User, Mic, Square, Paperclip } from 'lucide-react';
 
 interface Product {
   id: number;
@@ -39,6 +39,24 @@ interface Order {
   }>;
 }
 
+interface ChatMessage {
+  id: string;
+  from: 'user' | 'admin';
+  text: string;
+  attachments?: { name: string; type: string }[];
+  timestamp: number;
+}
+
+interface CustomerChat {
+  oderId: string;
+  odername: string;
+  customerEmail: string;
+  customerPhone?: string;
+  messages: ChatMessage[];
+  lastActivity: number;
+  unread: boolean;
+}
+
 interface AdminProps {
   onClose: () => void;
 }
@@ -51,7 +69,15 @@ const Admin: React.FC<AdminProps> = ({ onClose }) => {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
-  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'categories'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'categories' | 'messages'>('products');
+  const [customerChats, setCustomerChats] = useState<CustomerChat[]>([]);
+  const [selectedChat, setSelectedChat] = useState<CustomerChat | null>(null);
+  const [adminReply, setAdminReply] = useState('');
+  const [adminFiles, setAdminFiles] = useState<File[]>([]);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   useEffect(() => {
     // Load products from localStorage
@@ -113,7 +139,152 @@ const Admin: React.FC<AdminProps> = ({ onClose }) => {
       setCategories(defaultCategories);
       localStorage.setItem('categories', JSON.stringify(defaultCategories));
     }
+
+    // Load customer chats from localStorage
+    const savedChats = localStorage.getItem('customerChats');
+    if (savedChats) {
+      setCustomerChats(JSON.parse(savedChats));
+    }
+
+    // Listen for new chat messages
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'customerChats' && e.newValue) {
+        setCustomerChats(JSON.parse(e.newValue));
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Poll for new messages every 2 seconds
+    const pollInterval = setInterval(() => {
+      const chats = localStorage.getItem('customerChats');
+      if (chats) {
+        setCustomerChats(JSON.parse(chats));
+      }
+    }, 2000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(pollInterval);
+    };
   }, []);
+
+  // Recording timer effect
+  useEffect(() => {
+    let interval: number | undefined;
+    if (isRecording) {
+      interval = window.setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+    }
+    return () => {
+      if (interval) {
+        window.clearInterval(interval);
+      }
+    };
+  }, [isRecording]);
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const audioFile = new File([audioBlob], `admin-voice-${Date.now()}.webm`, { type: 'audio/webm' });
+        setAdminFiles(prev => [...prev, audioFile]);
+        stream.getTracks().forEach(track => track.stop());
+        setRecordingTime(0);
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      setRecordingTime(0);
+    } catch (error) {
+      console.error('Error accessing microphone:', error);
+      alert('Could not access microphone. Please allow microphone permissions.');
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleAdminFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setAdminFiles(prev => [...prev, ...Array.from(e.target.files!)]);
+    }
+  };
+
+  const removeAdminFile = (index: number) => {
+    setAdminFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSendAdminReply = () => {
+    if (!adminReply.trim() && adminFiles.length === 0) return;
+    if (!selectedChat) return;
+    
+    const attachmentMeta = adminFiles.map(f => ({ name: f.name, type: f.type }));
+    
+    const newMessage: ChatMessage = {
+      id: `admin-${Date.now()}`,
+      from: 'admin',
+      text: adminReply.trim(),
+      attachments: attachmentMeta.length > 0 ? attachmentMeta : undefined,
+      timestamp: Date.now()
+    };
+
+    const updatedChats = customerChats.map(chat => {
+      if (chat.oderId === selectedChat.oderId) {
+        return {
+          ...chat,
+          messages: [...chat.messages, newMessage],
+          lastActivity: Date.now(),
+          unread: false
+        };
+      }
+      return chat;
+    });
+
+    setCustomerChats(updatedChats);
+    localStorage.setItem('customerChats', JSON.stringify(updatedChats));
+    
+    // Update selected chat
+    const updatedSelectedChat = updatedChats.find(c => c.oderId === selectedChat.oderId);
+    if (updatedSelectedChat) {
+      setSelectedChat(updatedSelectedChat);
+    }
+    
+    setAdminReply('');
+    setAdminFiles([]);
+  };
+
+  const markChatAsRead = (chat: CustomerChat) => {
+    const updatedChats = customerChats.map(c => {
+      if (c.oderId === chat.oderId) {
+        return { ...c, unread: false };
+      }
+      return c;
+    });
+    setCustomerChats(updatedChats);
+    localStorage.setItem('customerChats', JSON.stringify(updatedChats));
+  };
 
   const saveProducts = (updatedProducts: Product[]) => {
     try {
@@ -432,6 +603,22 @@ const Admin: React.FC<AdminProps> = ({ onClose }) => {
               <Grid size={16} className="inline mr-1 sm:mr-2" />
               Categories
             </button>
+            <button
+              onClick={() => setActiveTab('messages')}
+              className={`px-4 sm:px-6 py-3 font-semibold border-b-2 transition-colors whitespace-nowrap text-sm sm:text-base relative ${
+                activeTab === 'messages'
+                  ? 'border-green-600 text-green-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <MessageCircle size={16} className="inline mr-1 sm:mr-2" />
+              Messages
+              {customerChats.filter(c => c.unread).length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {customerChats.filter(c => c.unread).length}
+                </span>
+              )}
+            </button>
           </div>
         </div>
 
@@ -621,6 +808,185 @@ const Admin: React.FC<AdminProps> = ({ onClose }) => {
                 ))}
               </div>
             </>
+          )}
+
+          {activeTab === 'messages' && (
+            <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-280px)] min-h-[400px]">
+              {/* Chat List */}
+              <div className="w-full lg:w-1/3 bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col">
+                <div className="p-4 border-b border-gray-200 bg-gray-50">
+                  <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                    <MessageCircle size={20} />
+                    Customer Chats
+                  </h3>
+                </div>
+                <div className="flex-1 overflow-y-auto">
+                  {customerChats.length === 0 ? (
+                    <div className="p-8 text-center text-gray-500">
+                      <MessageCircle size={48} className="mx-auto mb-4 opacity-30" />
+                      <p>No customer messages yet</p>
+                      <p className="text-sm mt-2">Messages from customers will appear here</p>
+                    </div>
+                  ) : (
+                    customerChats.sort((a, b) => b.lastActivity - a.lastActivity).map(chat => (
+                      <div
+                        key={chat.oderId}
+                        onClick={() => {
+                          setSelectedChat(chat);
+                          markChatAsRead(chat);
+                        }}
+                        className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
+                          selectedChat?.oderId === chat.oderId ? 'bg-green-50 border-l-4 border-l-green-500' : ''
+                        }`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                              <User size={20} className="text-gray-500" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-gray-900">{chat.odername || 'Anonymous'}</p>
+                              <p className="text-xs text-gray-500">{chat.customerEmail || chat.customerPhone || 'No contact'}</p>
+                            </div>
+                          </div>
+                          {chat.unread && (
+                            <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">New</span>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600 mt-2 truncate">
+                          {chat.messages[chat.messages.length - 1]?.text || 'Attachment'}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {new Date(chat.lastActivity).toLocaleString()}
+                        </p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Chat Messages */}
+              <div className="flex-1 bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col">
+                {selectedChat ? (
+                  <>
+                    <div className="p-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                          <User size={20} className="text-green-600" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-gray-900">{selectedChat.odername || 'Anonymous'}</p>
+                          <p className="text-sm text-gray-500">{selectedChat.customerEmail || selectedChat.customerPhone}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
+                      {selectedChat.messages.map(msg => (
+                        <div key={msg.id} className={`flex ${msg.from === 'admin' ? 'justify-end' : 'justify-start'}`}>
+                          <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+                            msg.from === 'admin' 
+                              ? 'bg-green-600 text-white' 
+                              : 'bg-white text-gray-900 border border-gray-200'
+                          }`}>
+                            <p className="text-sm whitespace-pre-line">{msg.text}</p>
+                            {msg.attachments && msg.attachments.length > 0 && (
+                              <div className="mt-2 space-y-1 text-xs opacity-80">
+                                {msg.attachments.map((file, idx) => (
+                                  <div key={idx} className="flex items-center gap-2">
+                                    <span>📎 {file.name}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            <p className={`text-[10px] mt-2 ${msg.from === 'admin' ? 'text-green-200' : 'text-gray-400'}`}>
+                              {new Date(msg.timestamp).toLocaleTimeString()}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="p-4 border-t border-gray-200 bg-white space-y-2">
+                      {/* Attached files preview */}
+                      {adminFiles.length > 0 && (
+                        <div className="flex flex-wrap gap-2 p-2 bg-gray-50 rounded-lg">
+                          {adminFiles.map((file, idx) => (
+                            <div key={idx} className="flex items-center gap-1 bg-white px-2 py-1 rounded-lg border border-gray-200 text-xs">
+                              <span className="max-w-[100px] truncate">{file.name}</span>
+                              <button onClick={() => removeAdminFile(idx)} className="text-red-500 hover:text-red-700 ml-1">
+                                <X size={12} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {/* Recording indicator */}
+                      {isRecording && (
+                        <div className="flex items-center gap-2 p-2 bg-red-50 rounded-lg border border-red-200">
+                          <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                          <span className="text-sm text-red-600 font-medium">Recording... {formatTime(recordingTime)}</span>
+                        </div>
+                      )}
+                      
+                      <div className="flex items-center gap-3 text-xs text-gray-500">
+                        <div className="flex items-center gap-2">
+                          <Paperclip size={14} />
+                          <label className="cursor-pointer font-semibold hover:text-green-600">
+                            Attach
+                            <input type="file" className="hidden" multiple accept="image/*,audio/*,video/*" onChange={handleAdminFileChange} />
+                          </label>
+                        </div>
+                        <div className="h-4 w-px bg-gray-200"></div>
+                        <button 
+                          onClick={isRecording ? stopRecording : startRecording}
+                          className={`flex items-center gap-1 font-semibold transition-colors ${isRecording ? 'text-red-500 hover:text-red-700' : 'hover:text-green-600'}`}
+                        >
+                          {isRecording ? (
+                            <>
+                              <Square size={14} className="fill-current" />
+                              <span>Stop</span>
+                            </>
+                          ) : (
+                            <>
+                              <Mic size={14} />
+                              <span>Voice</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                      <div className="flex gap-2">
+                        <textarea
+                          value={adminReply}
+                          onChange={(e) => setAdminReply(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              handleSendAdminReply();
+                            }
+                          }}
+                          placeholder="Type your reply..."
+                          className="flex-1 border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none h-12"
+                        />
+                        <button 
+                          onClick={handleSendAdminReply}
+                          className="bg-green-600 text-white px-4 rounded-xl hover:bg-green-700 transition-colors flex items-center justify-center"
+                        >
+                          <Send size={20} />
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex-1 flex items-center justify-center text-gray-500">
+                    <div className="text-center">
+                      <MessageCircle size={64} className="mx-auto mb-4 opacity-30" />
+                      <p className="font-semibold">Select a conversation</p>
+                      <p className="text-sm mt-2">Choose a chat from the list to view messages</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           )}
         </div>
       </div>

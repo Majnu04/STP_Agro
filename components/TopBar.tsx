@@ -30,11 +30,11 @@ const TopBar: React.FC<TopBarProps> = ({ language, onLanguageChange, t, onLoginC
   };
 
   return (
-    <div className="bg-gradient-to-r from-[#054025] via-[#0A773D] to-[#065a2f] border-b border-white/10 text-xs sm:text-sm text-gray-100 shadow-lg relative z-[100]">
-      <div className="container mx-auto px-4 h-10 md:h-11 flex justify-between items-center">
-        <div className="flex items-center space-x-3 md:space-x-6">
-          <a href="tel:+919676606857" className="flex items-center hover:text-agri-yellow transition-all font-semibold">
-            <Phone size={14} className="mr-1 md:mr-2" />
+    <div className="bg-gradient-to-r from-[#054025] via-[#0A773D] to-[#065a2f] border-b border-white/10 text-xs sm:text-sm text-gray-100 shadow-lg relative z-40">
+      <div className="container mx-auto px-3 sm:px-4 h-10 md:h-11 flex justify-between items-center">
+        <div className="flex items-center space-x-2 sm:space-x-3 md:space-x-6">
+          <a href="tel:+919676606857" className="flex items-center hover:text-agri-yellow transition-all font-semibold min-w-0">
+            <Phone size={14} className="mr-1 flex-shrink-0" />
             <span className="hidden sm:inline">+91 96766 06857</span>
           </a>
           <span className="text-white/30 hidden md:inline">|</span>
@@ -48,11 +48,11 @@ const TopBar: React.FC<TopBarProps> = ({ language, onLanguageChange, t, onLoginC
           <a onClick={onWishlistClick} className="hover:text-agri-yellow transition-all font-semibold cursor-pointer hidden md:inline">{t.wishlist}</a>
           
           {/* User Section */}
-          <div className="relative z-[101]">
+          <div className="relative z-50">
             <button
               onClick={() => user ? setIsUserDropdownOpen(!isUserDropdownOpen) : onLoginClick()}
               type="button"
-              className="flex items-center font-bold text-agri-yellow hover:text-yellow-200 transition-all cursor-pointer bg-white/20 backdrop-blur-sm px-2 md:px-3 py-1 md:py-1.5 rounded-lg border border-white/30 hover:border-agri-yellow hover:bg-white/30"
+              className="flex items-center font-bold text-agri-yellow hover:text-yellow-200 transition-all cursor-pointer bg-white/20 backdrop-blur-sm px-2 md:px-3 py-1.5 md:py-1.5 rounded-lg border border-white/30 hover:border-agri-yellow hover:bg-white/30 active:scale-95"
             >
               <User className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-1.5" />
               <span className="text-[10px] md:text-xs">{user ? user.name : t.login}</span>
@@ -62,11 +62,11 @@ const TopBar: React.FC<TopBarProps> = ({ language, onLanguageChange, t, onLoginC
             {/* User Dropdown */}
             {user && isUserDropdownOpen && (
               <>
-                <div 
-                  className="fixed inset-0 z-[99]" 
+                <div
+                  className="fixed inset-0 z-40"
                   onClick={() => setIsUserDropdownOpen(false)}
                 />
-                <div className="absolute right-0 top-full mt-2 w-48 bg-white shadow-2xl rounded-xl py-2 border border-gray-200 z-[102] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white shadow-2xl rounded-xl py-2 border border-gray-200 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                   <button
                     onClick={() => {
                       setIsUserDropdownOpen(false);
